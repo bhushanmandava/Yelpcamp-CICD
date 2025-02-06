@@ -1,0 +1,90 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: yelp-camp-secrets
+type: Opaque
+data:
+  CLOUDINARY_CLOUD_NAME: ZHY1YWdiYzhw
+  CLOUDINARY_KEY: MjU5MzM3OTEyODkzOTQz
+  CLOUDINARY_SECRET: VzBlTW9vUkxSYV9sVFpsUG5iT1hsRFpBZ0p3
+  MAPTILER_API_KEY: MmFoSURTd3pGVFVjQ0lHbmNaOHI=
+  DB_URL: bW9uZ29kYitzcnY6Ly9iOjU3NWdZb245Nlc5c0U5N2ZAY2x1c3RlcjAuc3VvOTAubW9uZ29kYi5uZXQvP3JldHJ5V3JpdGVzPXRydWUmdz1tYWpvcml0eSZhcHBOYW1lPUNsdXN0ZXIw
+  db_user_passcode: NTc1Z1lvbjk2VzlzRTk3Zg==
+  secret: c2VjcmV0
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yelp-camp-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yelp-camp
+  template:
+    metadata:
+      labels:
+        app: yelp-camp
+    spec:
+      containers:
+        - name: yelp-camp-container
+          image: bhushanmandava02/yelp-camp:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: CLOUDINARY_CLOUD_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: yelp-camp-secrets
+                  key: CLOUDINARY_CLOUD_NAME
+            - name: CLOUDINARY_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yelp-camp-secrets
+                  key: CLOUDINARY_KEY
+            - name: CLOUDINARY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: yelp-camp-secrets
+                  key: CLOUDINARY_SECRET
+            - name: MAPBOX_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: yelp-camp-secrets
+                  key: MAPBOX_TOKEN
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: yelp-camp-secrets
+                  key: DB_URL
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: yelp-camp-secrets
+                  key: SECRET
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30   # Adjust the initial delay here
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30   # Adjust the initial delay here
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yelp-camp-service
+spec:
+  selector:
+    app: yelp-camp
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: LoadBalancer
